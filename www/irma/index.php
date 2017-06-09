@@ -93,6 +93,12 @@ $app->get('/login', function (Request $request) use ($app, $options) {
     $id = $request_data['nameid']; // do we need to log in some specific user?
     if ($id === '') $id = null;
 
+//
+    $userdata = $id;
+    $app['session']->set('authn', array('username' => $userdata));
+    $app['session']->remove('sessionKey');
+    $app['monolog']->addInfo(sprintf("[%s] verified authenticated user '%s'", $sid, $userdata));
+//
 
     return $app['twig']->render('index.html', array(
         'self' => $base,
@@ -131,6 +137,13 @@ $app->get('/enrol', function (Request $request) use ($app, $options) {
         $return = $base;
     }
 
+    $sid = $app['session']->getId();
+    $uid = generate_id();
+    $app['session']->set('authn', array('username' => $uid)); // TODO check
+    $displayName = "SURFconext";
+    $app['monolog']->addInfo(sprintf("[%s] enrol uid '%s' (%s).", $sid, $uid, $displayName));
+    $app['monolog']->addInfo(sprintf("[%s] start enrol uid '%s'.", $sid, $uid));
+
     return $app['twig']->render('enrol.html', array(
         'self' => $base,
         'return_url' => $return,
@@ -138,18 +151,6 @@ $app->get('/enrol', function (Request $request) use ($app, $options) {
         'locale' => $app['translator']->getLocale(),
         'locales' => array_keys($options['translation']),
     ));
-});
-
-$app->get('/qr_enrol', function (Request $request) use ($app) {
-    $base = $request->getUriForPath('/');
-    // starting a new enrollment session
-    $sid = $app['session']->getId();
-    $uid = generate_id();
-    $app['session']->set('authn', array('username' => $uid)); // TODO check
-    $displayName = "SURFconext";
-    $app['monolog']->addInfo(sprintf("[%s] enrol uid '%s' (%s).", $sid, $uid, $displayName));
-    $app['monolog']->addInfo(sprintf("[%s] start enrol uid '%s'.", $sid, $uid));
-    return "";
 });
 
 $set_locale_cookie = function(Request $request, Response $response, Silex\Application $app) use ($options) {

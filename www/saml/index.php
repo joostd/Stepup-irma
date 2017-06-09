@@ -13,6 +13,7 @@ use SAML2\AuthnRequest;
 use SAML2\Message;
 use SAML2\Binding;
 use SAML2\Compat\ContainerSingleton;
+//use SAML2\XML\saml\NameID;
 
 function newID($length = 42) {
     $id = '_';
@@ -126,7 +127,7 @@ $app->get('/sso', function (Request $request) use ($config, $app) {
     $request_data['issuer'] = $issuer;
 
     // verify signature
-    if( file_exists($md['certfile']))
+    if( isset($md['certfile']) && file_exists($md['certfile']))
     {
         if( $request->get('Signature') == null) {
             throw new Exception("SAML Authnrequest must be signed");
@@ -141,7 +142,8 @@ $app->get('/sso', function (Request $request) use ($config, $app) {
     }
 
     $nameid = $samlrequest->getNameId();
-    $request_data['nameid'] = $nameid['Value'];
+//    $request_data['nameid'] = $nameid['Value'];
+    $request_data['nameid'] = $nameid->value;
 
     $request_data['id'] = $samlrequest->getId();
 

@@ -26,3 +26,7 @@ $options = array(
 if( file_exists(dirname(__FILE__) . "/local_options.php") ) {
     include(dirname(__FILE__) . "/local_options.php");
 }
+
+function generate_id($length = 4) {
+    return base_convert(time(),10,36) . '-' . base_convert(rand(0, pow(36,$length)),10,36);
+}

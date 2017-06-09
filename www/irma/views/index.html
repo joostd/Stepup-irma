@@ -78,6 +78,10 @@
         </form>
     </div>
 
+            <form id="dummy" action="{{ return_url }}">
+                <input type="submit" value="Proceed">
+            </form>
+            
     <script>
         $(function(){
             $('a.scan').click(function(){
@@ -93,25 +97,6 @@
             var $form = $( this ),
                     otp = $form.find( "input[name='otp']" ).val(),
                     url = '/irma/tiqr.php';
-            request = {
-                operation: "login",
-                notificationType: "",
-                notificationAddress: "",
-                userId: "{{ id }}",
-                response: otp,
-                sessionKey: "{{ sessionKey }}"
-            }
-            //var s = JSON.stringify(request);
-            $.post(url, request,
-                    function(data){
-                        if( data != "OK" ) {
-                            var res = data.split(":");
-                            data = res[0];
-                            $( "#result" ).empty().append( "Error: " + errors[data] );
-                            if( res[1] )
-                                $( "#result" ).append( " ({{ 'login.error.attempts_left' | trans }}: " + res[1] + ")" );
-                        }
-                    });
         });
 
     </script>
