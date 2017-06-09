@@ -1,0 +1,57 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
+<head>
+    <title>Registreer nieuw IRMA account</title>
+    <link rel="stylesheet" href="/bootstrap.min.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script type="text/JavaScript" src="/jquery-1.11.3.min.js"></script>
+    <script src="/bootstrap.min.js"></script>
+    <script type="text/javascript">
+
+    </script>
+</head>
+<body>
+
+<div class="container">
+
+    <div class="content">
+        <div class="page-header clearfix">
+            <img src="/images/irma.png" class="pull-left" alt="irma" height="74">
+            <img src="/images/surfnet.jpg" class="pull-right" alt="SURFnet">
+            <!--h1>Step-up Self-Service</h1-->
+        </div>
+
+        {% include "localeform.html" %}
+        <h2>{{ 'enrol.title'|trans }}</h2>
+
+        <p><span class="status-container"><!-- status info --></span></p>
+
+        <script type="text/javascript">
+            $( "span.status-container" ).html( "{{ 'enrol.status.initialized.1' | trans | raw }}" );
+        </script>
+
+        <form action="{{ return_url }}">
+            <input type="submit" value="Proceed">
+        </form>
+
+        <div class="qr">
+            {{ 'enrol.download' | trans | raw }}
+        </div>
+
+    </div><!-- /content -->
+
+    <footer>
+        <div class="row-fluid">
+            <div class="span8 offset2">
+                <hr>
+                <ul class="nav nav-pills">
+                    <li><a href="#" onclick="window.history.back();return false;">{{ 'enrol.cancel' | trans }}</a></li><!-- TODO -->
+                </ul>
+            </div>
+        </div>
+    </footer>
+
+</div><!-- /container -->
+
+</body>
+</html>
