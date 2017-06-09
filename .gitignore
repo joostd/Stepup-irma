@@ -1,0 +1,8 @@
+/composer.phar
+/vendor/
+local_config.php
+local_options.php
+*.pem
+*.log
+.vagrant
+.idea

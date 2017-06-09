@@ -1,0 +1,15 @@
+{
+    "name": "surfnet/stepup-irma",
+    "license": "Apache-2.0",
+    "description": "The SURFnet Step-up irma IdP performs IRMA authentication for use as a second factor.",
+    "require": {
+        "silex/silex": "~1.2",
+        "twig/twig": "1.*",
+        "monolog/monolog": "~1.12",
+        "symfony/translation": "~2.6",
+        "symfony/config": "~2.6",
+        "symfony/yaml": "~2.6",
+        "symfony/twig-bridge": "~2.6",
+        "simplesamlphp/saml2": "dev-master"
+    }
+}
