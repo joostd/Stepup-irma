@@ -4,10 +4,18 @@
     <title>Registreer nieuw IRMA account</title>
     <link rel="stylesheet" href="/bootstrap.min.css">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <script type="text/JavaScript" src="/jquery-1.11.3.min.js"></script>
-    <script src="/bootstrap.min.js"></script>
-    <script type="text/javascript">
 
+    <meta name="irma-web-server" value="{{ irma_web_server }}/server/" />
+    <meta name="irma-api-server" value="{{ irma_api_server }}/irma_api_server/api/v2/" />
+
+    <script type="text/javascript" src="/jquery-1.11.3.min.js"></script>
+    <script type="text/javascript" src="/bootstrap.min.js"></script>
+    <script type="text/javascript" src="{{ irma_web_server }}/client/irma.js"></script>
+    <script type="text/javascript" src="verify.js"></script>
+    <script type="text/javascript">
+        var jwt = "{{ jwt }}";
+        var self = "{{ self }}";
+        var return_url = "{{ return_url }}";
     </script>
 </head>
 <body>
@@ -30,9 +38,7 @@
             $( "span.status-container" ).html( "{{ 'enrol.status.initialized.1' | trans | raw }}" );
         </script>
 
-        <form action="{{ return_url }}">
-            <input type="submit" value="Proceed">
-        </form>
+        <button class="btn btn-primary" id="irma">Enroll IRMA</button>
 
         <div class="qr">
             {{ 'enrol.download' | trans | raw }}

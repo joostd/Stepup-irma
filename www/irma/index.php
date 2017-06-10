@@ -2,6 +2,7 @@
 
 require_once __DIR__.'/../../vendor/autoload.php';
 
+include('../../config.php');
 include('../../options.php');
 
 # todo i18n options data (eg SP displayname)
@@ -10,6 +11,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Translation\Loader\YamlFileLoader;
 use Symfony\Component\HttpFoundation\Cookie;
+use \Firebase\JWT\JWT;
 
 if( isset($options["default_timezone"]) )
     date_default_timezone_set($options["default_timezone"]);
@@ -124,7 +126,7 @@ $app->get('/logout', function (Request $request) use ($app) {
 
 ### Enrolment ###
 
-$app->get('/enrol', function (Request $request) use ($app, $options) {
+$app->get('/enrol', function (Request $request) use ($app, $options, $config) {
     $here = urlencode($app['request']->getUri()); // Is this allways correct?
 
     $base = $request->getUriForPath('/');
@@ -137,21 +139,80 @@ $app->get('/enrol', function (Request $request) use ($app, $options) {
         $return = $base;
     }
 
-    $sid = $app['session']->getId();
-    $uid = generate_id();
-    $app['session']->set('authn', array('username' => $uid)); // TODO check
-    $displayName = "SURFconext";
-    $app['monolog']->addInfo(sprintf("[%s] enrol uid '%s' (%s).", $sid, $uid, $displayName));
-    $app['monolog']->addInfo(sprintf("[%s] start enrol uid '%s'.", $sid, $uid));
-
     return $app['twig']->render('enrol.html', array(
         'self' => $base,
         'return_url' => $return,
         'here' => $here,
+        'jwt' => get_irma_disclosure_jwt(),
+        'irma_api_server' => $config['irma_api_server'],
+        'irma_web_server' => $config['irma_web_server'],
         'locale' => $app['translator']->getLocale(),
         'locales' => array_keys($options['translation']),
     ));
 });
+
+$app->post('/verify-attributes', function (Request $request) use ($app, $config) {
+    try {
+        // Verify and read the API server's JWT containing the IRMA attributes
+        $decoded = (array)JWT::decode($request->get('attrs'), get_apiserver_publickey(), array('RS256'));
+        $attrs = (array)$decoded['attributes'];
+        if ($decoded["status"] !== "VALID") // TODO improve error handling
+            throw new Exception("invalid");
+    } catch (Exception $exception) {
+        // TODO set some error state here?
+        return new Response("Failed to verify attributes: " . $exception->getMessage(), 400);
+    }
+
+    $sid = $app['session']->getId();
+    $uid = $attrs[$config['irma_attribute_id']];
+    $app['session']->set('authn', array('username' => $uid));
+    $displayName = "SURFconext";
+    $app['monolog']->addInfo(sprintf("[%s] enrol uid '%s' (%s).", $sid, $uid, $displayName));
+    $app['monolog']->addInfo(sprintf("[%s] start enrol uid '%s'.", $sid, $uid));
+
+    return new Response("OK");
+});
+
+function get_apiserver_publickey() {
+    global $config;
+    $pubkey = openssl_pkey_get_public("file://" . $config['irma_apiserver_publickey']);
+    if(!$pubkey)
+        throw new Exception("Failed to load API server public key");
+    return $pubkey;
+}
+
+function get_irma_privatekey() {
+    global $config;
+    $pk = openssl_pkey_get_private("file://" . $config['irma_keyfile']);
+    if ($pk === false)
+        throw new Exception("Failed to load signing key");
+    return $pk;
+}
+
+function get_irma_disclosure_jwt($expected_value = NULL) {
+    global $config;
+    $arr = $expected_value == NULL ?
+          [ $config['irma_attribute_id'] ]
+        : [ $config['irma_attribute_id'] => $expected_value ];
+    $sprequest = [
+        "sub" => "verification_request",
+        "iss" => $config['irma_issuer'],
+        "iat" => time(),
+        "sprequest" => [
+            "validity" => 60,
+            "request" => [
+                "content" => [
+                    [
+                        "label" => $config['irma_attribute_label'],
+                        "attributes" => $arr
+                    ]
+                ]
+            ]
+        ]
+    ];
+
+    return JWT::encode($sprequest, get_irma_privatekey(), "RS256", $config['irma_keyid']);
+}
 
 $set_locale_cookie = function(Request $request, Response $response, Silex\Application $app) use ($options) {
     $locale = $app['session']->get('locale');
