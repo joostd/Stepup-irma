@@ -23,15 +23,15 @@ $app = new Silex\Application();
 $app['debug'] = $options['debug'];
 
 $app->register(new Silex\Provider\SessionServiceProvider(), array(
-        'session.storage.options' => array(
-            'cookie_secure' => isset($_SERVER['HTTPS']),
-            'cookie_httponly' => true,
-        ),
+    'session.storage.options' => array(
+        'cookie_secure' => isset($_SERVER['HTTPS']),
+        'cookie_httponly' => true,
+    ),
 ));
 
 $app->register(new Silex\Provider\TwigServiceProvider(), array(
-        'twig.path' => __DIR__.'/views',
-    ));
+    'twig.path' => __DIR__.'/views',
+));
 
 $app->register(new Silex\Provider\MonologServiceProvider(), array(
     'monolog.handler' => $options['loghandler'],
@@ -68,40 +68,25 @@ $app->before(
 
 ### Authentication ###
 
-$app->get('/login', function (Request $request) use ($app, $options) {
-    $here = urlencode($app['request']->getUri()); // Is this allways correct?
-
+/**
+ * TODO: reuse /enrol function, or should these do different things?
+ */
+$app->get('/login', function (Request $request) use ($app, $options, $config) {
+    $here = urlencode($app['request']->getUri()); // Is this always correct?
     $sid = $app['session']->getId();
-
     $base = $request->getUriForPath('/');
+
     $return = stripslashes(filter_var($request->get('return'),FILTER_VALIDATE_URL));
-    if( $return == false ) {
-        $return = $base;
-    }
-    if(strpos($return, $request->getSchemeAndHttpHost() . '/') !== 0) {
+    if($return == false || strpos($return, $request->getSchemeAndHttpHost() . '/') !== 0) {
         $app['monolog']->addInfo(sprintf("[%s] illegal return URL '%s'", $sid, $return));
         $return = $base;
     }
 
-    $userdata = null; // todo
-    $app['monolog']->addInfo(sprintf("[%s] userdata '%s'", $sid, $userdata));
-    if (!is_null($userdata)) {
-        $app['session']->set('authn', array('username' => $userdata));  // logged in!
-        return $app->redirect($return);
-    }
-
-    // not logged in...
     $request_data = $app['session']->get('Request');
     $id = $request_data['nameid']; // do we need to log in some specific user?
     if ($id === '') $id = null;
 
-//
-    $userdata = $id;
-    $app['session']->set('authn', array('username' => $userdata));
-    $app['session']->remove('sessionKey');
-    $app['monolog']->addInfo(sprintf("[%s] verified authenticated user '%s'", $sid, $userdata));
-//
-
+    $app['monolog']->addInfo(sprintf("[%s] Verifying user '%s'", $sid, $id));
     return $app['twig']->render('index.html', array(
         'self' => $base,
         'return_url' => $return,
@@ -110,35 +95,35 @@ $app->get('/login', function (Request $request) use ($app, $options) {
         'isMobile' => preg_match("/iPhone|Android|iPad|iPod|webOS/", $_SERVER['HTTP_USER_AGENT']),
         'locale' => $app['translator']->getLocale(),
         'locales' => array_keys($options['translation']),
+        'jwt' => get_irma_disclosure_jwt($id),
+        'irma_api_server' => $config['irma_api_server'],
+        'irma_web_server' => $config['irma_web_server'],
     ));
 });
 
 $app->get('/', function (Request $request) use ($app) {
-        $sid = $app['session']->getId();
     return "n/a";
-    });
+});
 
 $app->get('/logout', function (Request $request) use ($app) {
-        $sid = $app['session']->getId();
-        $app['session']->set('authn', null);
-        return "You are logged out";
-    });
+    $app['session']->set('authn', null);
+    return "You are logged out";
+});
 
 ### Enrolment ###
 
 $app->get('/enrol', function (Request $request) use ($app, $options, $config) {
-    $here = urlencode($app['request']->getUri()); // Is this allways correct?
-
+    $here = urlencode($app['request']->getUri()); // Is this always correct?
+    $sid = $app['session']->getId();
     $base = $request->getUriForPath('/');
-    $return = stripslashes(filter_var($request->get('return'),FILTER_VALIDATE_URL));
-    if( $return == false ) {
-        $return = $base;
-    }
-    if(strpos($return, $request->getSchemeAndHttpHost() . '/') !== 0) {
+
+    $return = stripslashes(filter_var($request->get('return'), FILTER_VALIDATE_URL));
+    if($return == false || strpos($return, $request->getSchemeAndHttpHost() . '/') !== 0) {
         $app['monolog']->addInfo(sprintf("illegal return URL '%s'", $return));
         $return = $base;
     }
 
+    $app['monolog']->addInfo(sprintf("[%s] Enrolling new user", $sid));
     return $app['twig']->render('enrol.html', array(
         'self' => $base,
         'return_url' => $return,
@@ -166,9 +151,7 @@ $app->post('/verify-attributes', function (Request $request) use ($app, $config)
     $sid = $app['session']->getId();
     $uid = $attrs[$config['irma_attribute_id']];
     $app['session']->set('authn', array('username' => $uid));
-    $displayName = "SURFconext";
-    $app['monolog']->addInfo(sprintf("[%s] enrol uid '%s' (%s).", $sid, $uid, $displayName));
-    $app['monolog']->addInfo(sprintf("[%s] start enrol uid '%s'.", $sid, $uid));
+    $app['monolog']->addInfo(sprintf("[%s] Verified uid '%s' (%s).", $sid, $uid));
 
     return new Response("OK");
 });

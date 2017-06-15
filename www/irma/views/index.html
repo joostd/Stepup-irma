@@ -1,120 +1,57 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html>
 <head>
-    <meta charset="UTF-8" />
     <title>IRMA login</title>
+    <meta charset="UTF-8" />
+    <meta name="irma-web-server" value="{{ irma_web_server }}/server/" />
+    <meta name="irma-api-server" value="{{ irma_api_server }}/irma_api_server/api/v2/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
     <link rel="shortcut icon" href="/images/favicon.ico" />
     <link rel="stylesheet" href="/bootstrap.min.css">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <script type="text/JavaScript" src="/jquery-1.11.3.min.js"></script>
-    <script src="/bootstrap.min.js"></script>
+
+    <script type="text/javascript" src="/jquery-1.11.3.min.js"></script>
+    <script type="text/javascript" src="/bootstrap.min.js"></script>
+    <script type="text/javascript" src="{{ irma_web_server }}/client/irma.js"></script>
+    <script type="text/javascript" src="verify.js"></script>
+    <script type="text/javascript">
+        var jwt = "{{ jwt }}";
+        var return_url = "{{ return_url }}";
+        var self = "{{ self }}";
+        var errors = {
+            INVALID_CHALLENGE:"{{ 'login.error.invalid_challenge' | trans }}",
+            INVALID_RESPONSE:"{{ 'login.error.invalid_response' | trans }}",
+            INVALID_USER:"{{ 'login.error.invalid_user' | trans }}",
+            ACCOUNT_BLOCKED:"{{ 'login.error.account_blocked' | trans }}"
+        };
+    </script>
 </head>
 <body>
-<script type="text/javascript">
-    const myself = "{{self}}";
-
-    var errors = {
-    	INVALID_CHALLENGE:"{{ 'login.error.invalid_challenge' | trans }}",
-	    INVALID_RESPONSE:"{{ 'login.error.invalid_response' | trans }}",
-        INVALID_USER:"{{ 'login.error.invalid_user' | trans }}",
-        ACCOUNT_BLOCKED:"{{ 'login.error.account_blocked' | trans }}"
-    }
-</script>
-
 <div class="container">
+    <div class="content">
+        <div class="page-header clearfix">
+            <img src="/images/irma.png" class="pull-left" alt="irma" height="74">
+            <img src="/images/surfnet.jpg" class="pull-right" alt="SURFnet">
+        </div>
 
-        <div class="content">
-            <div class="page-header clearfix">
-                <img src="/images/irma.png" class="pull-left" alt="irma" height="74">
-                <img src="/images/surfnet.jpg" class="pull-right" alt="SURFnet">
-            </div>
+        {% include "localeform.html" %}
 
-{% include "localeform.html" %}
-    <h2>{{ 'login.title' | trans }}</h2>
+        <h2>{{ 'login.title' | trans }}</h2>
 
-{% if id %}
-    <!-- logging in with irma id {{ id }}-->
-    {{ 'login.push.message' | trans }}
-    <ul>
-            <li>{{ 'login.push.instructions.1' | trans }}</li>
-            <li>{{ 'login.push.instructions.2' | trans }}</li>
-        </ul>
-    <br/>
-    {{ 'login.push.fail' | trans({'%link_start%': '<a class="scan" href="#">', '%link_end%': '</a>'}) | raw  }}
-{% else %}
-    {{ 'login.qr.message' | trans }}
-    <br/>
-    {{ 'login.qr.no_account' | trans({'%link_start%': '<a href=\'/irma/enrol?return='~return_url~'\'>', '%link_end%': '</a>'}) | raw  }}
-    <!--TODO fix URL -->
-{% endif %}
-
-    <br/>
-
-    <div class="qr" style="{{ id ? 'display:none;' : '' }}">
-        {% if isMobile %}
-        <a href="{{authUrl}}">
-        {% else %}
-        <a href="#" onClick="javascript:jQuery('#otpform').slideToggle();">
-        {% endif %}
-            <img src='qr' style="cursor: none;" />
-        </a>
-        <p>
-            {{ 'login.qr.manual.message' | trans({'%link_start%': '<a href="#" onClick="javascript:jQuery(\'#otpform\').slideToggle();">', '%link_end%': '</a>'}) | raw }}
-        </p>
-    </div>
-
-    <div id="otpform" style="display:none">
-        <form method="POST" class="form-inline">
-            <div class="input-group">
-                {% if not id %}
-                {{ 'login.qr.manual.userid' | trans }}: <input type="text" tabindex="2" name="userID"/>
-                {% else %}
-                                                        <input type="hidden" value="{{ id }}" name="userID"/>
-                {% endif %}
-                {{ 'login.qr.manual.otp' | trans }}: <input type="text" name="otp" tabindex="3" placeholder="one time password..." autocomplete="off"/>
-                <button type="submit"  class="btn btn-primary">{{ 'login.qr.manual.button' | trans }}</button>
-                <div id="result"></div>
-            </div>
-        </form>
-    </div>
-
-            <form id="dummy" action="{{ return_url }}">
-                <input type="submit" value="Proceed">
-            </form>
-            
-    <script>
-        $(function(){
-            $('a.scan').click(function(){
-                $( "div.qr" ).show( "slow" );
-            });
-        });
-
-        // Attach a submit handler to the OTP form
-        $( "#otpform" ).submit(function( event ) {
-            // Stop form from submitting normally
-            event.preventDefault();
-            // Get otp value from the form:
-            var $form = $( this ),
-                    otp = $form.find( "input[name='otp']" ).val(),
-                    url = '/irma/tiqr.php';
-        });
-
-    </script>
-
+        <button class="btn btn-primary" id="irma">IRMA 2nd factor</button>
     </div><!-- /content -->
 
     <footer>
-            <div class="row-fluid">
-                <div class="span8 offset2">
-                    <hr>
-                    <ul class="nav nav-pills">
-                        <li><a href="#" onclick="window.history.back();return false;">{{ 'login.cancel' | trans }}</a></li>
-                        <!-- TODO Send Response with status Failed -->
-                    </ul>
-                </div>
+        <div class="row-fluid">
+            <div class="span8 offset2">
+                <hr>
+                <ul class="nav nav-pills">
+                    <li><a href="#" onclick="window.history.back();return false;">{{ 'login.cancel' | trans }}</a></li>
+                    <!-- TODO Send Response with status Failed -->
+                </ul>
             </div>
-        </footer>
-
+        </div>
+    </footer>
 </div><!-- /container -->    
 
 </body>
