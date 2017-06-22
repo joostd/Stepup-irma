@@ -1,7 +1,7 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html>
 <head>
-    <title>Registreer nieuw IRMA account</title>
+    <title>{{ 'enrol.title' | trans }}</title>
     <link rel="stylesheet" href="/bootstrap.min.css">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
@@ -26,23 +26,16 @@
         <div class="page-header clearfix">
             <img src="/images/irma.png" class="pull-left" alt="irma" height="74">
             <img src="/images/surfnet.jpg" class="pull-right" alt="SURFnet">
-            <!--h1>Step-up Self-Service</h1-->
         </div>
 
         {% include "localeform.html" %}
-        <h2>{{ 'enrol.title'|trans }}</h2>
+        <h2>{{ 'enrol.title' | trans }}</h2>
 
-        <p><span class="status-container"><!-- status info --></span></p>
+        <p><span class="status-container">{{ 'enrol.status.initialized.1' | trans | raw }}</span></p>
 
-        <script type="text/javascript">
-            $( "span.status-container" ).html( "{{ 'enrol.status.initialized.1' | trans | raw }}" );
-        </script>
+        <button class="btn btn-primary" id="irma">{{ 'enrol.title' | trans }}</button>
 
-        <button class="btn btn-primary" id="irma">Enroll IRMA</button>
-
-        <div class="qr">
-            {{ 'enrol.download' | trans | raw }}
-        </div>
+        <p>{{ 'enrol.download' | trans | raw }}</p>
 
     </div><!-- /content -->
 
