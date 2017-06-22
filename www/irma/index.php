@@ -68,9 +68,6 @@ $app->before(
 
 ### Authentication ###
 
-/**
- * TODO: reuse /enrol function, or should these do different things?
- */
 $app->get('/login', function (Request $request) use ($app, $options, $config) {
     $here = urlencode($app['request']->getUri()); // Is this always correct?
     $sid = $app['session']->getId();
@@ -144,7 +141,6 @@ $app->post('/verify-attributes', function (Request $request) use ($app, $config)
         if ($decoded["status"] !== "VALID") // TODO improve error handling
             throw new Exception("invalid");
     } catch (Exception $exception) {
-        // TODO set some error state here?
         return new Response("Failed to verify attributes: " . $exception->getMessage(), 400);
     }
 
