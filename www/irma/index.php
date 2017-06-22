@@ -68,7 +68,7 @@ $app->before(
 
 ### Authentication ###
 
-$app->get('/login', function (Request $request) use ($app, $options, $config) {
+$app->get('/login', function (Request $request) use ($app, $options) {
     $here = urlencode($app['request']->getUri()); // Is this always correct?
     $sid = $app['session']->getId();
     $base = $request->getUriForPath('/');
@@ -93,8 +93,8 @@ $app->get('/login', function (Request $request) use ($app, $options, $config) {
         'locale' => $app['translator']->getLocale(),
         'locales' => array_keys($options['translation']),
         'jwt' => get_irma_disclosure_jwt($id),
-        'irma_api_server' => $config['irma_api_server'],
-        'irma_web_server' => $config['irma_web_server'],
+        'irma_api_server' => $options['irma_api_server'],
+        'irma_web_server' => $options['irma_web_server'],
     ));
 });
 
@@ -109,7 +109,7 @@ $app->get('/logout', function (Request $request) use ($app) {
 
 ### Enrolment ###
 
-$app->get('/enrol', function (Request $request) use ($app, $options, $config) {
+$app->get('/enrol', function (Request $request) use ($app, $options) {
     $here = urlencode($app['request']->getUri()); // Is this always correct?
     $sid = $app['session']->getId();
     $base = $request->getUriForPath('/');
@@ -126,14 +126,14 @@ $app->get('/enrol', function (Request $request) use ($app, $options, $config) {
         'return_url' => $return,
         'here' => $here,
         'jwt' => get_irma_disclosure_jwt(),
-        'irma_api_server' => $config['irma_api_server'],
-        'irma_web_server' => $config['irma_web_server'],
+        'irma_api_server' => $options['irma_api_server'],
+        'irma_web_server' => $options['irma_web_server'],
         'locale' => $app['translator']->getLocale(),
         'locales' => array_keys($options['translation']),
     ));
 });
 
-$app->post('/verify-attributes', function (Request $request) use ($app, $config) {
+$app->post('/verify-attributes', function (Request $request) use ($app, $options) {
     try {
         // Verify and read the API server's JWT containing the IRMA attributes
         $decoded = (array)JWT::decode($request->get('attrs'), get_apiserver_publickey(), array('RS256'));
@@ -145,7 +145,7 @@ $app->post('/verify-attributes', function (Request $request) use ($app, $config)
     }
 
     $sid = $app['session']->getId();
-    $uid = $attrs[$config['irma_attribute_id']];
+    $uid = $attrs[$options['irma_attribute_id']];
     $app['session']->set('authn', array('username' => $uid));
     $app['monolog']->addInfo(sprintf("[%s] Verified uid '%s' (%s).", $sid, $uid));
 
@@ -153,36 +153,36 @@ $app->post('/verify-attributes', function (Request $request) use ($app, $config)
 });
 
 function get_apiserver_publickey() {
-    global $config;
-    $pubkey = openssl_pkey_get_public("file://" . $config['irma_apiserver_publickey']);
+    global $options;
+    $pubkey = openssl_pkey_get_public("file://" . $options['irma_apiserver_publickey']);
     if(!$pubkey)
         throw new Exception("Failed to load API server public key");
     return $pubkey;
 }
 
 function get_irma_privatekey() {
-    global $config;
-    $pk = openssl_pkey_get_private("file://" . $config['irma_keyfile']);
+    global $options;
+    $pk = openssl_pkey_get_private("file://" . $options['irma_keyfile']);
     if ($pk === false)
         throw new Exception("Failed to load signing key");
     return $pk;
 }
 
 function get_irma_disclosure_jwt($expected_value = NULL) {
-    global $config;
+    global $options;
     $arr = $expected_value == NULL ?
-          [ $config['irma_attribute_id'] ]
-        : [ $config['irma_attribute_id'] => $expected_value ];
+          [ $options['irma_attribute_id'] ]
+        : [ $options['irma_attribute_id'] => $expected_value ];
     $sprequest = [
         "sub" => "verification_request",
-        "iss" => $config['irma_issuer'],
+        "iss" => $options['irma_issuer'],
         "iat" => time(),
         "sprequest" => [
             "validity" => 60,
             "request" => [
                 "content" => [
                     [
-                        "label" => $config['irma_attribute_label'],
+                        "label" => $options['irma_attribute_label'],
                         "attributes" => $arr
                     ]
                 ]
@@ -190,7 +190,7 @@ function get_irma_disclosure_jwt($expected_value = NULL) {
         ]
     ];
 
-    return JWT::encode($sprequest, get_irma_privatekey(), "RS256", $config['irma_keyid']);
+    return JWT::encode($sprequest, get_irma_privatekey(), "RS256", $options['irma_keyid']);
 }
 
 $set_locale_cookie = function(Request $request, Response $response, Silex\Application $app) use ($options) {
