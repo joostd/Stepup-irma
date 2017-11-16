@@ -10,5 +10,5 @@ enrol:
     status:
         initialized.1: Klik op onderstaande knop, en scan de QR code in je IRMA app op je telefoon.
         finalized: Je account is gereed voor gebruik.
-    download: Download de IRMA-app voor <a href="https://play.google.com/store/apps/details?id=org.irmacard.cardemu&hl=nl">Android</a>
+    download: Download de IRMA-app voor <a href="https://itunes.apple.com/us/app/irma-authentication/id1294092994">iOS</a>/<a href="https://play.google.com/store/apps/details?id=foundation.privacybydesign.irma&hl=nl">Android</a>
     cancel: Annuleren

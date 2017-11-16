@@ -11,5 +11,5 @@ enrol:
         initialized.1: Click the button below, and scan the QR code in the IRMA app on your phone.
         processed: One moment please...
         finalized: Your account is ready for use.
-    download: Download IRMA for <a href="https://play.google.com/store/apps/details?id=org.irmacard.cardemu&hl=en">Android</a>
+    download: Download IRMA for <a href="https://itunes.apple.com/us/app/irma-authentication/id1294092994">iOS</a>/<a href="https://play.google.com/store/apps/details?id=foundation.privacybydesign.irma&hl=en">Android</a>
     cancel: Cancel
