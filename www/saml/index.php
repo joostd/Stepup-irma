@@ -13,7 +13,6 @@ use SAML2\AuthnRequest;
 use SAML2\Message;
 use SAML2\Binding;
 use SAML2\Compat\ContainerSingleton;
-//use SAML2\XML\saml\NameID;
 
 function newID($length = 42) {
     $id = '_';
@@ -165,7 +164,7 @@ $app->get('/sso', function (Request $request) use ($config, $app) {
 
 $app->get('/sso_return', function (Request $request) use ($config, $app) {
 
-    SAML2_Compat_ContainerSingleton::setContainer(new Saml2Container(
+    ContainerSingleton::setContainer(new Saml2Container(
         $app['monolog']
     ));
 

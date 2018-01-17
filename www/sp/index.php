@@ -5,8 +5,11 @@ include_once './../../options.php';
 
 require_once 'container.php';
 
+use SAML2\AuthnRequest;
+use SAML2\Compat\ContainerSingleton;
+use SAML2\Constants;
+use SAML2\HTTPRedirect;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpFoundation\Response;
 
 use RobRichards\XMLSecLibs\XMLSecurityKey;
 
@@ -38,17 +41,17 @@ $app->get('/', function (Request $request) use ($app) {
  */
 $app->get('/login/{nameid}', function (Request $request, $nameid) use ($config, $app)
 {
-    SAML2_Compat_ContainerSingleton::setContainer(new Saml2Container(
+    ContainerSingleton::setContainer(new Saml2Container(
         $app['monolog']
     ));
     $base = $request->getUriForPath('/');
-    $saml_request = new SAML2_AuthnRequest();
+    $saml_request = new AuthnRequest();
     $saml_request->setIssuer($base . 'metadata');
     $saml_request->setDestination($base . "../saml/sso");
     $saml_request->setAssertionConsumerServiceURL($base . 'acs');
     $saml_request->setRelayState($base . "session");
     if( $nameid )
-        $saml_request->setNameId(array('Value' => $nameid, 'Format' => SAML2_Const::NAMEID_UNSPECIFIED));
+        $saml_request->setNameId(array('Value' => $nameid, 'Format' => Constants::NAMEID_UNSPECIFIED));
     // Sign request
     $keyfile = $config['keyfile']; // reuse key
     if( !file_exists($keyfile) ) {
@@ -59,7 +62,7 @@ $app->get('/login/{nameid}', function (Request $request, $nameid) use ($config, 
         $saml_request->setSignatureKey($key);
     }
     // Use Redirect binding regardless of what the SP asked for
-    $binding = new SAML2_HTTPRedirect();
+    $binding = new HTTPRedirect();
     $destination = $binding->getRedirectURL($saml_request);
     $app['monolog']->addDebug('Redirect to ' . $destination);
     return $app->redirect($destination);
