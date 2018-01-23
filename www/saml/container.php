@@ -3,8 +3,9 @@
 require_once __DIR__.'/../../vendor/autoload.php';
 
 use Psr\Log\LoggerInterface;
+use SAML2\Compat\AbstractContainer;
 
-class Saml2Container extends SAML2_Compat_AbstractContainer
+class Saml2Container extends AbstractContainer
 {
     /**
      * @var \Psr\Log\LoggerInterface
