@@ -110,6 +110,8 @@ $app->get('/logout', function (Request $request) use ($app) {
 ### Enrolment ###
 
 $app->get('/enrol', function (Request $request) use ($app, $options) {
+    $requestor = new \IRMA\Requestor($options['irma_issuer'], $options['irma_keyid'], $options['irma_keyfile']);
+
     $here = urlencode($app['request']->getUri()); // Is this always correct?
     $sid = $app['session']->getId();
     $base = $request->getUriForPath('/');
@@ -120,12 +122,22 @@ $app->get('/enrol', function (Request $request) use ($app, $options) {
         $return = $base;
     }
 
+    $uid = generate_id();
+    $app['session']->set('authn', array('username' => $uid));
+
+    $jwt = $requestor->getIssuanceJwt([
+        [
+            "credential" => "pbdf.surf.secureid",
+            "attributes" => [ "secureid" => $new_id, "environment" => "pilot" ]
+        ]
+    ]);
+
     $app['monolog']->addInfo(sprintf("[%s] Enrolling new user", $sid));
     return $app['twig']->render('enrol.html', array(
         'self' => $base,
         'return_url' => $return,
         'here' => $here,
-        'jwt' => get_irma_disclosure_jwt(),
+        'jwt' => $jwt,
         'irma_api_server' => $options['irma_api_server'],
         'irma_web_server' => $options['irma_web_server'],
         'locale' => $app['translator']->getLocale(),
@@ -148,6 +160,16 @@ $app->post('/verify-attributes', function (Request $request) use ($app, $options
     $uid = $attrs[$options['irma_attribute_id']];
     $app['session']->set('authn', array('username' => $uid));
     $app['monolog']->addInfo(sprintf("[%s] Verified uid '%s' (%s).", $sid, $uid));
+
+    return new Response("OK");
+});
+
+$app->post('/attributes-issued', function (Request $request) use ($app, $options) {
+    $sid = $app['session']->getId();
+    $uid = $attrs[$options['irma_attribute_id']];
+    $authn = $app['session']->get('authn');
+    $username = $authn['username'];
+    $app['monolog']->addInfo(sprintf("[%s] issued uid '%s'", $sid, $username));
 
     return new Response("OK");
 });
