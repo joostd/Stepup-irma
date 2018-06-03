@@ -25,10 +25,10 @@ $options = array(
     'irma_web_server' => 'https://example.com/irma_api_server',         // Hosts some static files
     'irma_keyfile' => dirname(__FILE__) . "/irma_key.pem",              // To sign our IRMA disclosure request with
     'irma_apiserver_publickey' => dirname(__FILE__) . "/apiserver.pem", // public key of the IRMA API server
-    'irma_attribute_id' => "pbdf.pbdf.surfnet.id",                      // the attribute we ask for
-    'irma_attribute_label' => "SURFnet ID",                             // human-readable version of attribute name
+    'irma_attribute_id' => "pbdf.surf.secureid",                        // the attribute we ask for
+    'irma_attribute_label' => "token identifier",                       // human-readable version of attribute name
     'irma_keyid' => "surfnet_stepup",                                   // our name at the IRMA API server
-    'irma_issuer' => "SURFconext 2-Factor"                              // human-readable version
+    'irma_issuer' => "SURFsecureID"                                     // human-readable version
 );
 
 // override options locally. TODO merge with config

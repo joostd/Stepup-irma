@@ -128,7 +128,7 @@ $app->get('/enrol', function (Request $request) use ($app, $options) {
     $jwt = $requestor->getIssuanceJwt([
         [
             "credential" => "pbdf.surf.secureid",
-            "attributes" => [ "secureid" => $new_id, "environment" => "pilot" ]
+            "attributes" => [ "secureid" => $uid, "environment" => "pilot" ]
         ]
     ]);
 
